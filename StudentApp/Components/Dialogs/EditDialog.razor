@@ -1,0 +1,73 @@
+﻿@using StudentApp.Models
+<RadzenTemplateForm TItem="Student" Data=@Student Submit=@EditAsync InvalidSubmit=@OnInvalidSubmit>
+    <RadzenRow>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenFormField Text="First Name" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="FirstName" @bind-Value="Student.FirstName" Style="width:100%;" />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="FirstName" Text="First Name is required" Popup=@popup Style="position: absolute" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+              <RadzenFormField Text="Last Name" Style="width: 100%;">
+                  <ChildContent>
+                    <RadzenTextBox Name="LastName" @bind-Value="Student.LastName" Style="width:100%;" />
+                      </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="LastName" Text="Last Name is required" Popup=@popup Style="position: absolute" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenFormField Text="Personal ID" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric Name="NRC" ShowUpDown="false" @bind-Value="@Student.Nrc" Style="width: 100%;" />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="NRC" Text="NRC is required" Popup=@popup Style="position: absolute" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenFormField Text="Address" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="Address" @bind-Value="@Student.Address" Style="width: 100%;" />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="Address" Text="Address is required" Popup=@popup Style="position: absolute" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenFormField Text="Phone Number" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="PhoneNumber" @bind-Value="@Student.PhoneNumber" Style="width: 100%;" />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="PhoneNumber" Text="Phone Number is required" Popup=@popup Style="position: absolute" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenFormField Text="Program" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenDropDown Name="Program" TValue="int?" Data="@Programs" TextProperty="Name" @bind-Value="Student.ProgramId" ValueProperty="Id" />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="Program" Text="Program is required" Popup=@popup Style="position: absolute" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenButton Style="width:100%" Click="ClearFields" ButtonStyle="ButtonStyle.Light" Text="Clear" />
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeSM="6">
+            <RadzenButton Style="width:100%" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Text="Save" />
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenTemplateForm>
+
+
