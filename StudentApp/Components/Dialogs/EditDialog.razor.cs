@@ -7,6 +7,7 @@ namespace StudentApp.Components.Dialogs
 {
     public partial class EditDialog
     {
+        #region Parameters
         [Parameter]
         public string FirstName { get; set; } = default!;
         [Parameter]
@@ -27,10 +28,13 @@ namespace StudentApp.Components.Dialogs
         public IEnumerable<Programs>? Programs { get; set; }
         [Parameter]
         public string StudentId { get; set; } = default!;
-        private Student Student = new Student();
+        #endregion
+        #region Srvices
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] StudentService StudentService { get; set; } = default!;
         [Inject] private NotificationService NotificationService { get; set; } = default!;
+        #endregion
+        private Student Student = new Student();
         private bool popup;
         protected override async Task OnInitializedAsync()
         {

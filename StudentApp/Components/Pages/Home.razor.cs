@@ -9,16 +9,24 @@ namespace StudentApp.Components.Pages
 {
     public partial class Home
     {
-        private Student Student = new Student();
-        private IEnumerable<Programs>? programs = new List<Programs>();
+       
+        #region Services
         [Inject] StudentService StudentService { get; set; } = default!;
         [Inject] ProgramsService ProgramsService { get; set; } = default!;
         [Inject] private NotificationService NotificationService { get; set; } = default!;
         [Inject] StorageHelper storageHelper { get; set; } = default!;
         [Inject] DialogService DialogService { get; set; } = default!;
+        #endregion
+        #region List
+        private IEnumerable<Programs>? programs = new List<Programs>();
         private IEnumerable<Student>? students = new List<Student>();
+        IList<Student>? selectedStudents;
+        #endregion
+        #region Objects
+        private Student Student = new Student();
         private readonly Random random = new Random();
         private string StudentNumber = string.Empty;
+        #endregion
         RadzenDataGrid<Student>? StudentDataGrid;
         private bool IsLoading;
         readonly DataGridEditMode editMode = DataGridEditMode.Single;
@@ -29,7 +37,6 @@ namespace StudentApp.Components.Pages
         private string AttachmentInfo = string.Empty;
         private readonly bool visible;
         private string? nrcValue;
-        IList<Student>? selectedStudents;
         RadzenDataGrid<Student>? grid;
         bool allowRowSelectOnRowClick = false;
 
