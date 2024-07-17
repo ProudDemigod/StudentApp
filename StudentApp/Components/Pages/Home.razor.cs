@@ -225,6 +225,7 @@ namespace StudentApp.Components.Pages
         private async void UpdateUI()
         {
             students = await StudentService.GetStudentsAsync();
+            students = students?.OrderByDescending(st => st.Id).ToList();
             programs = await ProgramsService.GetProgramsAsync();
             StateHasChanged();
         }
