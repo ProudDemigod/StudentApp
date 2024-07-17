@@ -99,8 +99,19 @@ else
     @if (programs != null && programs.Any())
     {
         <RadzenStack Style="margin-top:15px; margin-bottom: 15px">
-            <RadzenDataGrid AllowPaging="true" AllowFiltering="true" FilterIcon="filter" AllowColumnPicking="true" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" PageSize="5" Data="students" @ref="StudentDataGrid" TItem="Student">
+            <RadzenDataGrid AllowRowSelectOnRowClick="@allowRowSelectOnRowClick" @bind-Value=@selectedStudents SelectionMode="DataGridSelectionMode.Multiple" AllowColumnReorder="false" AllowColumnResize="true" AllowPaging="true" AllowFiltering="true" FilterIcon="filter" AllowColumnPicking="true" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" PageSize="5" Data="students" @ref="StudentDataGrid" TItem="Student">
                 <Columns>
+                    <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">
+                        <HeaderTemplate>
+                            <RadzenCheckBox TabIndex="-1" TriState="false" TValue="bool?" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select all items" }})"
+                                            Value="@(selectedStudents == null || selectedStudents?.Any() != true ? false : !students.All(i => selectedStudents.Contains(i)) ? null : students.Any(i => selectedStudents.Contains(i)))"
+                                            Change="@(args => selectedStudents = args == true ? students?.ToList() : null)" />
+                        </HeaderTemplate>
+                        <Template Context="data">
+                            <RadzenCheckBox TabIndex="-1" TriState="false" Value="@(selectedStudents != null && selectedStudents.Contains(data))" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select item" }})"
+                                            TValue="bool" Change=@(args => { if(!allowRowSelectOnRowClick) { StudentDataGrid?.SelectRow(data); }}) />
+                        </Template>
+                    </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="Student" Property="FirstName" Title="First Name" />
                     <RadzenDataGridColumn TItem="Student" Property="LastName" Title="Last Name" />
                     <RadzenDataGridColumn TItem="Student" FilterValue="@nrcValue" Filterable="true" Property="Nrc" Title="Personal ID">
@@ -116,6 +127,7 @@ else
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="Student" Property="StudentId" Title="Student Number" />
+                    <RadzenDataGridColumn TItem="Student" Property="DateCreated" Title="Date Created" />
                     <RadzenDataGridColumn Pickable="false" Title="Edit">
                         <Template>
                             <RadzenIcon Style="cursor:pointer" @onclick="(()=>OpenEditDialog(context, context.Id))" Icon="edit" IconColor="@Colors.InfoLight" />

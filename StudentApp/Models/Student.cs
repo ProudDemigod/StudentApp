@@ -39,6 +39,7 @@ public partial class Student
     public string StudentId { get; set; }
 
     public int? ProgramId { get; set; }
+    public DateTime? DateCreated { get; set; } = DateTime.Now;
 
     [ForeignKey("ProgramId")]
     [InverseProperty("Students")]

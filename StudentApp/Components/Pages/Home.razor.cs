@@ -25,12 +25,13 @@ namespace StudentApp.Components.Pages
         private string Theme = "Default";
         private string ThemeValue = string.Empty;
         private readonly bool popup;
-        private readonly bool allowRowSelectOnRowClick = true;
-        private readonly IList<Student>? SelectedStudents;
         private readonly double value;
         private string AttachmentInfo = string.Empty;
         private readonly bool visible;
         private string? nrcValue;
+        IList<Student>? selectedStudents;
+        RadzenDataGrid<Student>? grid;
+        bool allowRowSelectOnRowClick = false;
 
         readonly bool cancelUpload = false;
         private readonly List<string> Themes = new List<string>
@@ -43,6 +44,7 @@ namespace StudentApp.Components.Pages
             await base.OnInitializedAsync();
             students = await StudentService.GetStudentsAsync();
             programs = await ProgramsService.GetProgramsAsync();
+            students = students?.OrderByDescending(st => st.Id).ToList();
         }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -93,6 +95,7 @@ namespace StudentApp.Components.Pages
                 });
                 IsLoading = false;
                 students = await StudentService.GetStudentsAsync();
+                students = students?.OrderByDescending(st => st.Id).ToList();
                 Student = new Student();
                 StateHasChanged();
             }
@@ -154,28 +157,63 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-                string actionText = "delete";
-                bool? result = await DialogService.Confirm($"Are you sure you want to {actionText} this record?", "Update", new ConfirmOptions() { CloseDialogOnOverlayClick = true, CloseDialogOnEsc = true, Draggable = false, OkButtonText = "Yes", CancelButtonText = "No" });
-
-                if (result != null)
+               if(selectedStudents?.Count > 1)
                 {
-                    if ((bool)result)
-                    {
+                    string actionText = "delete";
+                    bool? result = await DialogService.Confirm($"Are you sure you want to {actionText} these record?", "Delete", new ConfirmOptions() { CloseDialogOnOverlayClick = true, CloseDialogOnEsc = true, Draggable = false, OkButtonText = "Yes", CancelButtonText = "No" });
 
-                        IsLoading = true;
-                        await StudentService.DeleteStudentAsync(Id);
-                        ShowNotification(new NotificationMessage
+                    if (result != null)
+                    {
+                        if ((bool)result)
                         {
-                            Severity = NotificationSeverity.Success,
-                            Summary = "Success",
-                            Detail = "Student Deleted Successfully",
-                            Duration = 4000
-                        });
-                        IsLoading = false;
-                        students = await StudentService.GetStudentsAsync();
-                        Student = new Student();
-                        StateHasChanged();
-                        DialogService.Close();
+
+                            IsLoading = true;
+                            foreach(var student in selectedStudents)
+                            {
+                                await StudentService.DeleteStudentAsync(student.Id);
+                            }
+                            ShowNotification(new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Success,
+                                Summary = "Success",
+                                Detail = "Records Removed Successfully",
+                                Duration = 4000
+                            });
+                            IsLoading = false;
+                            students = await StudentService.GetStudentsAsync();
+                            students = students?.OrderByDescending(st => st.Id).ToList();
+                            Student = new Student();
+                            StateHasChanged();
+                            DialogService.Close();
+                        }
+                    }
+                }
+                else
+                {
+                    string actionText = "delete";
+                    bool? result = await DialogService.Confirm($"Are you sure you want to {actionText} this record?", "Delete", new ConfirmOptions() { CloseDialogOnOverlayClick = true, CloseDialogOnEsc = true, Draggable = false, OkButtonText = "Yes", CancelButtonText = "No" });
+
+                    if (result != null)
+                    {
+                        if ((bool)result)
+                        {
+
+                            IsLoading = true;
+                            await StudentService.DeleteStudentAsync(Id);
+                            ShowNotification(new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Success,
+                                Summary = "Success",
+                                Detail = "Record Removed Successfully",
+                                Duration = 4000
+                            });
+                            IsLoading = false;
+                            students = await StudentService.GetStudentsAsync();
+                            students = students?.OrderByDescending(st => st.Id).ToList();
+                            Student = new Student();
+                            StateHasChanged();
+                            DialogService.Close();
+                        }
                     }
                 }
             }
