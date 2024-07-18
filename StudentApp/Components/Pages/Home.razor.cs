@@ -1,31 +1,39 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
 using StudentApp.Components.Dialogs;
 using StudentApp.JSServices;
 using StudentApp.Models;
 using StudentApp.Services;
+using System;
+using System.IO;
 namespace StudentApp.Components.Pages
 {
     public partial class Home
     {
-       
+
         #region Services
         [Inject] StudentService StudentService { get; set; } = default!;
         [Inject] ProgramsService ProgramsService { get; set; } = default!;
         [Inject] private NotificationService NotificationService { get; set; } = default!;
         [Inject] StorageHelper storageHelper { get; set; } = default!;
+        [Inject] IJSRuntime JSRuntime { get; set; } = default!;
         [Inject] DialogService DialogService { get; set; } = default!;
+        [Inject] AttachmentService AttachmentService { get; set; } = default!;  
         #endregion
         #region List
         private IEnumerable<Programs>? programs = new List<Programs>();
         private IEnumerable<Student>? students = new List<Student>();
         IList<Student>? selectedStudents;
+        private IEnumerable<Attachment>? attachments = new List<Attachment>();
         #endregion
         #region Objects
         private Student Student = new Student();
         private readonly Random random = new Random();
         private string StudentNumber = string.Empty;
+        private Attachment? attachment;
         #endregion
         RadzenDataGrid<Student>? StudentDataGrid;
         private bool IsLoading;
@@ -37,8 +45,12 @@ namespace StudentApp.Components.Pages
         private string AttachmentInfo = string.Empty;
         private readonly bool visible;
         private string? nrcValue;
-        RadzenDataGrid<Student>? grid;
-        bool allowRowSelectOnRowClick = false;
+        readonly RadzenDataGrid<Student>? grid;
+        readonly bool allowRowSelectOnRowClick = false;
+        readonly RadzenUpload? upload;
+        readonly RadzenUpload? uploadDD;
+        byte[]? documentContent;
+        string? documentMimeType;
 
         readonly bool cancelUpload = false;
         private readonly List<string> Themes = new List<string>
@@ -47,11 +59,20 @@ namespace StudentApp.Components.Pages
         };
         protected override async Task OnInitializedAsync()
         {
-            Theme = ThemeValue;
-            await base.OnInitializedAsync();
-            students = await StudentService.GetStudentsAsync();
-            programs = await ProgramsService.GetProgramsAsync();
-            students = students?.OrderByDescending(st => st.Id).ToList();
+            try
+            {
+                Theme = ThemeValue;
+                await base.OnInitializedAsync();
+                students = await StudentService.GetStudentsAsync();
+                programs = await ProgramsService.GetProgramsAsync();
+                students = students?.OrderByDescending(st => st.Id).ToList();
+                attachments = await AttachmentService.GetAttachmentsAsync();
+            }
+            catch (Exception ex)
+            {
+                var error = ex.Message;
+                throw new Exception(ex.Message);
+            }
         }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -85,26 +106,53 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-                IsLoading = true;
-                StudentNumber = $"{random.Next(1000) + 1:D4}";
-                student.StudentId = StudentNumber;
-                var FirstName = TrimInput(student.FirstName);
-                var LastName = TrimInput(student.LastName);
-                student.FirstName = FirstName;
-                student.LastName = LastName;
-                await StudentService.AddStudentAsync(student);
-                ShowNotification(new NotificationMessage
+                if(attachment != null && attachment?.FileContent != null)
                 {
-                    Severity = NotificationSeverity.Success,
-                    Summary = "Success",
-                    Detail = "Student Created Successfully",
-                    Duration = 4000
-                });
-                IsLoading = false;
-                students = await StudentService.GetStudentsAsync();
-                students = students?.OrderByDescending(st => st.Id).ToList();
-                Student = new Student();
-                StateHasChanged();
+                    IsLoading = true;
+                    StudentNumber = $"{random.Next(1000) + 1:D4}";
+                    student.StudentId = StudentNumber;
+                    var FirstName = TrimInput(student.FirstName);
+                    var LastName = TrimInput(student.LastName);
+                    student.FirstName = FirstName;
+                    student.LastName = LastName;
+                    await AttachmentService.AddAttachmentAsync(attachment);
+                    attachment = new Attachment();
+                    ShowNotification(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Saving attachment",
+                        Detail = "Please wait",
+                        Duration = 4000
+                    });
+                    var latestAttachment = await AttachmentService.GetAttachmentsAsync();
+                    var latestAttachmentId = latestAttachment?.Last().Id;
+                    student.AttchmentId = latestAttachmentId;
+                    await StudentService.AddStudentAsync(student);
+                    ShowNotification(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Success",
+                        Detail = "Student addedd successfully",
+                        Duration = 4000
+                    });
+                    IsLoading = false;
+                    students = await StudentService.GetStudentsAsync();
+                    students = students?.OrderByDescending(st => st.Id).ToList();
+                    Student = new Student();
+                    attachments = await AttachmentService.GetAttachmentsAsync();
+                    StateHasChanged();
+                }
+                else
+                {
+                    ShowNotification(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Please add attachment.\n Please try again.",
+                        Duration = 4000
+                    });
+                }
+               
             }
             catch (Exception ex)
             {
@@ -164,7 +212,7 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-               if(selectedStudents?.Count > 1)
+                if (selectedStudents?.Count > 1)
                 {
                     string actionText = "delete";
                     bool? result = await DialogService.Confirm($"Are you sure you want to {actionText} these record?", "Delete", new ConfirmOptions() { CloseDialogOnOverlayClick = true, CloseDialogOnEsc = true, Draggable = false, OkButtonText = "Yes", CancelButtonText = "No" });
@@ -175,7 +223,7 @@ namespace StudentApp.Components.Pages
                         {
 
                             IsLoading = true;
-                            foreach(var student in selectedStudents)
+                            foreach (var student in selectedStudents)
                             {
                                 await StudentService.DeleteStudentAsync(student.Id);
                             }
@@ -236,5 +284,166 @@ namespace StudentApp.Components.Pages
             programs = await ProgramsService.GetProgramsAsync();
             StateHasChanged();
         }
+        private IBrowserFile? selectedFile;
+        private string? fileContent;
+        private async void OnFileInput(InputFileChangeEventArgs args)
+        {
+            long maxFileSize = 5 * 1024 * 1024;
+            selectedFile = args.File;
+            if(selectedFile.Size > maxFileSize)
+            {
+                ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Warning",
+                    Detail = "File size is greater that max allowed\n Please select a different file",
+                    Duration = 4000
+                });
+                attachment = new Attachment();
+            }
+            else
+            {
+                attachment = new Attachment
+                {
+                    FileName = selectedFile.Name,
+                    FileType = selectedFile.ContentType,
+                };
+                using (var stream = selectedFile.OpenReadStream(maxFileSize))
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await stream.CopyToAsync(memoryStream);
+                        attachment.FileContent = memoryStream.ToArray();
+                    }
+                }
+                ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Success",
+                    Detail = "File successfully selected",
+                    Duration = 4000
+                });
+            }
+          
+
+        }
+        private async Task ViewSingleAttachedDocument(int? attchmentId)
+        {
+            try
+            {
+                IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attchmentId);
+                foreach (var attachment in _attachments)
+                {
+                    if (attachment.FileContent != null && attachment.FileContent.Length > 0)
+                    {
+                        documentContent = attachment.FileContent;
+                        documentMimeType = attachment.FileType;
+
+                        // Open the dialog
+                       
+                        };
+                        using (MemoryStream stream = new MemoryStream(attachment.FileContent))
+                        {
+
+                            stream.Position = 0;
+
+                            await DialogService.OpenAsync<DocumentViewer>("Attachment",
+                        new Dictionary<string, object?>()
+                        {
+                              {"DocumentContent", documentContent},
+                              {"DocumentMimeType", documentMimeType},
+                        },
+                        new DialogOptions() { Width = "1400px", Height = "840px", Resizable = true, Draggable = true });
+                        
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+            }
+        }
+        private async Task DownloadSingleAttachedDocument(int? attachmentId)
+        {
+            try
+            {
+                IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attachmentId);
+                foreach (var attachment in _attachments)
+                {
+                    var mimeType = "application/octet-stream";
+                    using (MemoryStream stream = new MemoryStream(attachment.FileContent))
+                    {
+                        stream.Position = 0;
+                        await JSRuntime.InvokeVoidAsync("downloadFile", attachment.FileName, mimeType, attachment.FileContent);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "An error occured",
+                    Detail = "Download failed",
+                    Duration = 4000
+                });
+            }
+        }
+        void OnChange(UploadChangeEventArgs args, string name)
+        {
+            foreach (var file in args.Files)
+            {
+                //console.Log($"File: {file.Name} / {file.Size} bytes");
+            }
+
+            //console.Log($"{name} changed");
+        }
+        //async Task ShowBusyDialog(bool withMessageAsString)
+        //{
+        //    InvokeAsync(async () =>
+        //    {
+        //        // Simulate background task
+        //        await Task.Delay(2000);
+
+        //        // Close the dialog
+        //        DialogService.Close();
+        //    });
+
+        //    if (withMessageAsString)
+        //    {
+        //        await BusyDialog("Loading ...");
+        //    }
+        //    //else
+        //    //{
+        //    //    await BusyDialog();
+        //    //}
+        //}
+
+        //// Busy dialog from string
+        //async Task BusyDialog(string message)
+        //{
+        //    await DialogService.OpenAsync("", ds =>
+        //    {
+        //        RenderFragment content = b =>
+        //        {
+        //            b.OpenElement(0, "RadzenRow");
+
+        //            b.OpenElement(1, "RadzenColumn");
+        //            b.AddAttribute(2, "Size", "12");
+
+        //            b.AddContent(3, message);
+
+        //            b.CloseElement();
+        //            b.CloseElement();
+        //        };
+        //        return content;
+        //    }, new DialogOptions() { ShowTitle = false, Style = "min-height:auto;min-width:auto;width:auto", CloseDialogOnEsc = false });
+        //}
     }
 }

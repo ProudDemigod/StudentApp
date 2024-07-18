@@ -57,7 +57,7 @@ namespace StudentApp.Controllers
             }
             catch (DbUpdateException)
             {
-                if (PermitRequestExists(student.Id))
+                if (StudentExists(student.Id))
                 {
                     return Conflict();
                 }
@@ -84,7 +84,7 @@ namespace StudentApp.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!PermitRequestExists(id))
+                if (!StudentExists(id))
                 {
                     return NotFound();
                 }
@@ -96,7 +96,7 @@ namespace StudentApp.Controllers
 
             return NoContent();
         }
-        private bool PermitRequestExists(int id)
+        private bool StudentExists(int id)
         {
             return (_managementContext.Students?.Any(e => e.Id == id)).GetValueOrDefault();
         }

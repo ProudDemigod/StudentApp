@@ -19,12 +19,11 @@ public partial class Programs
     public string Name { get; set; }
 
     public int? Duration { get; set; }
+
     [StringLength(10)]
+    [Unicode(false)]
     public string ProgramCode { get; set; }
 
     [InverseProperty("Program")]
     public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
-
-    [InverseProperty("Program")]
-    public virtual ICollection<Student> Students { get; set; } = new List<Student>();
 }

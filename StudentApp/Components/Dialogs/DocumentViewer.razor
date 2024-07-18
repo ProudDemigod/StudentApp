@@ -1,0 +1,39 @@
+﻿<RadzenStack>
+    <RadzenCard>
+        @if (!string.IsNullOrEmpty(DocumentContent.ToString()))
+        {
+            @if (DocumentMimeType == "image/jpeg")
+            {
+                <object data="@documentUrl" type="image/jpeg" width="max-content" height="max-content">
+                    <p>Your browser does not support Images. <a href="@documentUrl">Download the Image</a> instead.</p>
+                </object>
+            }
+            else if (DocumentMimeType == "application/pdf")
+            {
+                <object data="@documentUrl" type="application/pdf" width="100%" height="840px">
+                    <p>Your browser does not support PDFs. <a href="@documentUrl">Download the PDF</a> instead.</p>
+                </object>
+            }
+            else if (DocumentMimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            {
+                <object data="@documentUrl" type="application/vnd.openxmlformats-officedocument.wordprocessingml.document" width="max-content" height="max-content">
+                    <p>Your browser does not support .wordprocessingml.document. <a href="@documentUrl">Download the Word Document</a> instead.</p>
+                </object>
+            }
+            else if (DocumentMimeType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                <object data="@documentUrl" type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" width="max-content" height="max-content">
+                    <p>Your browser does not support .spreadsheetml.sheet. <a href="@documentUrl">Download the Excel Document</a> instead.</p>
+                </object>
+            }
+            else
+            {
+                <p>This document type is not supported for preview.</p>
+            }
+        }
+        else
+        {
+            <p>No document content available.</p>
+        }
+    </RadzenCard>
+</RadzenStack>

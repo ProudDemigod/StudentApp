@@ -42,16 +42,6 @@ else
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="6" SizeSM="6">
-                        <RadzenFormField Text="Personal ID" Style="width: 100%;">
-                            <ChildContent>
-                                <RadzenNumeric Name="NRC" ShowUpDown="false" @bind-Value="@Student.Nrc" Style="width: 100%;" />
-                            </ChildContent>
-                            <Helper>
-                                <RadzenRequiredValidator Component="NRC" Text="NRC is required" Popup=@popup Style="position: absolute" />
-                            </Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="6" SizeSM="6">
                         <RadzenFormField Text="Address" Style="width: 100%;">
                             <ChildContent>
                                 <RadzenTextBox Name="Address" @bind-Value="@Student.Address" Style="width: 100%;" />
@@ -61,8 +51,16 @@ else
                             </Helper>
                         </RadzenFormField>
                     </RadzenColumn>
-
-
+                    <RadzenColumn Size="6" SizeSM="6">
+                        <RadzenFormField Text="Personal ID" Style="width: 100%;">
+                            <ChildContent>
+                                <RadzenNumeric Name="NRC" ShowUpDown="false" @bind-Value="@Student.Nrc" Style="width: 100%;" />
+                            </ChildContent>
+                            <Helper>
+                                <RadzenRequiredValidator Component="NRC" Text="NRC is required" Popup=@popup Style="position: absolute" />
+                            </Helper>
+                        </RadzenFormField>
+                    </RadzenColumn>
                     <RadzenColumn Size="6" SizeSM="6">
                         <RadzenFormField Text="Phone Number" Style="width: 100%;">
                             <ChildContent>
@@ -74,7 +72,7 @@ else
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="6" SizeSM="6">
-                        <RadzenFormField Text="Program" Style="width: 100%;">
+                        <RadzenFormField Text="Program" Style="width: 100%">
                             <ChildContent>
                                 <RadzenDropDown Name="Program" TValue="int?" Data="@programs" TextProperty="Name" @bind-Value="Student.ProgramId" ValueProperty="Id" />
                             </ChildContent>
@@ -82,6 +80,13 @@ else
                                 <RadzenRequiredValidator Component="Program" Text="Program is required" Popup=@popup Style="position: absolute" />
                             </Helper>
                         </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeSM="12">
+                        <div>
+                            <RadzenCard>
+                                <InputFile OnChange="OnFileInput" />
+                            </RadzenCard>
+                        </div>
                     </RadzenColumn>
                     <RadzenColumn Size="6" SizeSM="6">
                         <RadzenButton Click="ClearFields" Text="Clear" ButtonStyle="ButtonStyle.Light" Style="width:100%" />
@@ -93,9 +98,9 @@ else
             </RadzenFieldset>
         </RadzenStack>
     </RadzenTemplateForm>
-    <RadzenText @bind-value="AttachmentInfo" />
+    <RadzenText Text="@AttachmentInfo" @bind-value="@AttachmentInfo" />
     <RadzenProgressBar Value="100" Visible="IsLoading" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-    @if (programs != null && programs.Any())
+    @if ((programs != null && programs.Any()) && (attachments != null && attachments.Any()))
     {
         <RadzenStack Style="margin-top:15px; margin-bottom: 15px">
             <RadzenDataGrid AllowRowSelectOnRowClick="@allowRowSelectOnRowClick" @bind-Value=@selectedStudents SelectionMode="DataGridSelectionMode.Multiple" AllowColumnReorder="false" AllowColumnResize="true" AllowPaging="true" AllowFiltering="true" FilterIcon="filter" AllowColumnPicking="true" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" PageSize="5" Data="students" @ref="StudentDataGrid" TItem="Student">
@@ -127,6 +132,12 @@ else
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="Student" Property="StudentId" Title="Student Number" />
                     <RadzenDataGridColumn TItem="Student" Property="DateCreated" Title="Date Created" />
+                    <RadzenDataGridColumn Filterable="false" TItem="Student" Property="Attachment" Title="Attachment">
+                        <Template>
+                            <RadzenIcon Style="cursor:pointer;" @onclick="(()=>ViewSingleAttachedDocument(context.AttchmentId))" Icon="file_open" IconColor="@Colors.InfoLight" />
+                            <RadzenIcon Style="cursor:pointer; margin-left: 20px" @onclick="(()=>DownloadSingleAttachedDocument(context.AttchmentId))" Icon="download" IconColor="@Colors.Primary" />
+                        </Template>
+                    </RadzenDataGridColumn>
                     <RadzenDataGridColumn Pickable="false" Title="Edit">
                         <Template>
                             <RadzenIcon Style="cursor:pointer" @onclick="(()=>OpenEditDialog(context, context.Id))" Icon="edit" IconColor="@Colors.InfoLight" />
@@ -140,6 +151,7 @@ else
                 </Columns>
             </RadzenDataGrid>
         </RadzenStack>
+ @*        <RadzenButton Style="margin:20px" Text="Click" ButtonStyle="ButtonStyle.Primary" Click="()=>ShowBusyDialog(true)" /> *@
     }
     else
     {

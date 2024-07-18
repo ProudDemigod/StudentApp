@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace StudentApp.Models;
@@ -39,14 +38,13 @@ public partial class Student
     public string StudentId { get; set; }
 
     public int? ProgramId { get; set; }
+
+    [Column(TypeName = "datetime")]
     public DateTime? DateCreated { get; set; } = DateTime.Now;
 
-    [ForeignKey("ProgramId")]
-    [InverseProperty("Students")]
-    public virtual Programs Program { get; set; }
+    public int? AttchmentId { get; set; }
 
-    public static implicit operator Student(ActionResult<Student> v)
-    {
-        throw new NotImplementedException();
-    }
+    [ForeignKey("AttchmentId")]
+    [InverseProperty("Students")]
+    public virtual Attachment Attachment { get; set; }
 }

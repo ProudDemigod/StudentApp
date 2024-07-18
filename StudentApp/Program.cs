@@ -19,6 +19,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<ProgramsService>();
 builder.Services.AddScoped<StorageHelper>();
+builder.Services.AddScoped<AttachmentService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
