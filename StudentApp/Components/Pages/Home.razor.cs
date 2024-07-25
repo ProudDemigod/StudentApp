@@ -331,31 +331,45 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-                IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attchmentId);
-                foreach (var attachment in _attachments)
+                if (attachments != null)
                 {
-                    if (attachment.FileContent != null && attachment.FileContent.Length > 0)
+                    IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attchmentId);
+                    foreach (var attachment in _attachments)
                     {
-                        documentContent = attachment.FileContent;
-                        documentMimeType = attachment.FileType;
+                        if (attachment.FileContent != null && attachment.FileContent.Length > 0)
+                        {
+                            documentContent = attachment.FileContent;
+                            documentMimeType = attachment.FileType;
 
-                        // Open the dialog
-                       
+                            // Open the dialog
+
                         };
-                        using (MemoryStream stream = new MemoryStream(attachment.FileContent))
-                        {
+                        if (attachment.FileContent != null)
+                            using (MemoryStream stream = new MemoryStream(attachment.FileContent))
+                            {
 
-                            stream.Position = 0;
+                                stream.Position = 0;
 
-                            await DialogService.OpenAsync<DocumentViewer>("Attachment",
-                        new Dictionary<string, object?>()
-                        {
+                                await DialogService.OpenAsync<DocumentViewer>("Attachment",
+                            new Dictionary<string, object?>()
+                            {
                               {"DocumentContent", documentContent},
                               {"DocumentMimeType", documentMimeType},
-                        },
-                        new DialogOptions() { Width = "1400px", Height = "840px", Resizable = true, Draggable = true });
-                        
+                            },
+                            new DialogOptions() { Width = "1400px", Height = "840px", Resizable = true, Draggable = true });
+
+                            }
                     }
+                }
+                else 
+                {
+                    ShowNotification(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Warning,
+                        Summary = "Attachment not available for this record",
+                        Detail = "",
+                        Duration = 4000
+                    });
                 }
             }
             catch (Exception ex)
@@ -373,18 +387,31 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-                IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attachmentId);
-                foreach (var attachment in _attachments)
+                if(attachments != null)
                 {
-                    var mimeType = "application/octet-stream";
-                    using (MemoryStream stream = new MemoryStream(attachment.FileContent))
+                    IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attachmentId);
+                    foreach (var attachment in _attachments)
                     {
-                        stream.Position = 0;
-                        await JSRuntime.InvokeVoidAsync("downloadFile", attachment.FileName, mimeType, attachment.FileContent);
+                        var mimeType = "application/octet-stream";
+                        using (MemoryStream stream = new MemoryStream(attachment.FileContent))
+                        {
+                            stream.Position = 0;
+                            await JSRuntime.InvokeVoidAsync("downloadFile", attachment.FileName, mimeType, attachment.FileContent);
+                        }
                     }
                 }
+                else
+                {
+                    ShowNotification(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Warning,
+                        Summary = "Unable to download attachment",
+                        Detail = "",
+                        Duration = 4000
+                    });
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ShowNotification(new NotificationMessage
                 {

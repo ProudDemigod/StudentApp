@@ -8,6 +8,7 @@ namespace StudentApp.Components.Dialogs
 
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             // Retrieve document content from the database (replace this with your actual code)
             _ = DocumentContent;
             // Convert the byte array to a base64 string
@@ -16,8 +17,8 @@ namespace StudentApp.Components.Dialogs
             string mimeType = DocumentMimeType; // Change this according to your document type
             documentUrl = $"data:{mimeType};base64,{base64String}";
         }
-        [Parameter] public byte[] DocumentContent { get; set; }
-        [Parameter] public string DocumentMimeType { get; set; }
+        [Parameter] public byte[] DocumentContent { get; set; } = default!;
+        [Parameter] public string DocumentMimeType { get; set; } = default!;
         private readonly string url = "${data:@DocumentMimeType;base64,@DocumentContent.ToString()}";
     }
 }

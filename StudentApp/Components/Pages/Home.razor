@@ -41,7 +41,7 @@ else
                             </Helper>
                         </RadzenFormField>
                     </RadzenColumn>
-                    <RadzenColumn Size="6" SizeSM="6">
+                    <RadzenColumn Size="12" SizeSM="12">
                         <RadzenFormField Text="Address" Style="width: 100%;">
                             <ChildContent>
                                 <RadzenTextBox Name="Address" @bind-Value="@Student.Address" Style="width: 100%;" />
@@ -81,7 +81,7 @@ else
                             </Helper>
                         </RadzenFormField>
                     </RadzenColumn>
-                    <RadzenColumn Size="12" SizeSM="12">
+                    <RadzenColumn Style="padding:2px" Size="6" SizeSM="6">
                         <div>
                             <RadzenCard>
                                 <InputFile OnChange="OnFileInput" />
@@ -155,7 +155,7 @@ else
     }
     else
     {
-        <RadzenStack Orientation="Radzen.Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="Radzen.AlignItems.Center" Wrap="FlexWrap.Wrap" style="height: 100vh;">
+        <RadzenStack Orientation="Radzen.Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="Radzen.AlignItems.Center" Wrap="FlexWrap.Wrap" style="height: 100vh;">
             <CustomeSpinner IsVisible="true" />
         </RadzenStack>
     }
