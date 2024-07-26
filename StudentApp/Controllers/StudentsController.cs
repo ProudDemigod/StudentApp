@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using StudentApp.Hubs;
 using StudentApp.Models;
 
 namespace StudentApp.Controllers
@@ -9,9 +11,11 @@ namespace StudentApp.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly StudentManagementContext _managementContext;
-        public StudentsController(StudentManagementContext managementContext)
+        private readonly IHubContext<StudentHub> _hubContext;
+        public StudentsController(StudentManagementContext managementContext, IHubContext<StudentHub> hubContext)
         {
             _managementContext = managementContext;
+            _hubContext = hubContext;
         }
         [HttpGet]
         public async Task<IActionResult> GetAsync()
@@ -53,6 +57,7 @@ namespace StudentApp.Controllers
             try
             {
                 _ = await _managementContext.SaveChangesAsync();
+                await _hubContext.Clients.All.SendAsync("ReceiveStudentData", student);
                 return Created();
             }
             catch (DbUpdateException)
@@ -81,6 +86,7 @@ namespace StudentApp.Controllers
             try
             {
                 _ = await _managementContext.SaveChangesAsync();
+                await _hubContext.Clients.All.SendAsync("ReceiveStudentData", student);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -115,7 +121,7 @@ namespace StudentApp.Controllers
 
             _ = _managementContext.Students.Remove(student);
             _ = await _managementContext.SaveChangesAsync();
-
+            await _hubContext.Clients.All.SendAsync("StudentDeleted", Id);
             return NoContent();
         }
     }

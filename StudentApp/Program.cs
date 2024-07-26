@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 using StudentApp.Components;
+using StudentApp.Hubs;
 using StudentApp.JSServices;
 using StudentApp.Models;
 using StudentApp.Services;
@@ -15,11 +16,12 @@ builder.Services.AddRazorComponents()
 builder.Services.AddRadzenComponents();
 builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7083/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5221/") });
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<ProgramsService>();
 builder.Services.AddScoped<StorageHelper>();
 builder.Services.AddScoped<AttachmentService>();
+builder.Services.AddSignalR();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,8 +36,8 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.MapHub<StudentHub>("/studenthub");
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapControllers();
-
 app.Run();
