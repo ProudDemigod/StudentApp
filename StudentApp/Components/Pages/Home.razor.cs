@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
@@ -7,8 +8,8 @@ using StudentApp.Components.Dialogs;
 using StudentApp.JSServices;
 using StudentApp.Models;
 using StudentApp.Services;
-using System;
-using System.IO;
+using Microsoft.AspNetCore.SignalR.Client;
+using System.Text.Json;
 namespace StudentApp.Components.Pages
 {
     public partial class Home
@@ -21,11 +22,13 @@ namespace StudentApp.Components.Pages
         [Inject] StorageHelper storageHelper { get; set; } = default!;
         [Inject] IJSRuntime JSRuntime { get; set; } = default!;
         [Inject] DialogService DialogService { get; set; } = default!;
-        [Inject] AttachmentService AttachmentService { get; set; } = default!;  
+        [Inject] AttachmentService AttachmentService { get; set; } = default!;
+        [Inject] NavigationManager Navigation { get; set; } = default!;
+        private HubConnection hubConnection;
         #endregion
         #region List
         private IEnumerable<Programs>? programs = new List<Programs>();
-        private IEnumerable<Student>? students = new List<Student>();
+        private List<Student>? students = new List<Student>();
         IList<Student>? selectedStudents;
         private IEnumerable<Attachment>? attachments = new List<Attachment>();
         #endregion
@@ -61,12 +64,44 @@ namespace StudentApp.Components.Pages
         {
             try
             {
+                students = await StudentService.GetStudentsAsync();
+                hubConnection = new HubConnectionBuilder()
+                 .WithUrl(Navigation.ToAbsoluteUri("/studenthub"))
+                 .Build();
+
+                hubConnection.On<Student>("ReceiveStudentData", (updatedStudent) =>
+                {
+                    var existingStudent = students?.FirstOrDefault(s => s.Id == updatedStudent.Id);
+                    if (existingStudent != null)
+                    {
+                        students?.Remove(existingStudent);
+                        students?.Add(updatedStudent);
+                        students = students?.OrderByDescending(st => st.Id).ToList();
+                    }
+                    else
+                    {
+                        students?.Add(updatedStudent);
+                        students = students?.OrderByDescending(st => st.Id).ToList();
+                    }
+                    InvokeAsync(StateHasChanged);
+                });
+                hubConnection.On<int>("StudentDeleted", (studentId) =>
+                {
+                    var student = students?.FirstOrDefault(s => s.Id == studentId);
+                    if (student != null)
+                    {
+                        students?.Remove(student);
+                        students = students?.OrderByDescending(st => st.Id).ToList();
+                    }
+                    InvokeAsync(StateHasChanged);
+                });
+                await hubConnection.StartAsync();
                 Theme = ThemeValue;
                 await base.OnInitializedAsync();
-                students = await StudentService.GetStudentsAsync();
+               
                 programs = await ProgramsService.GetProgramsAsync();
                 students = students?.OrderByDescending(st => st.Id).ToList();
-                attachments = await AttachmentService.GetAttachmentsAsync();
+                //attachments = await AttachmentService.GetAttachmentsAsync();
             }
             catch (Exception ex)
             {
@@ -77,8 +112,16 @@ namespace StudentApp.Components.Pages
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             ThemeValue = await GetThemeValue();
+            if (ThemeValue.IsNullOrEmpty())
+            {
+                await SetThemeValue("Material.css");
+            }
             Theme = ThemeValue;
             StateHasChanged();
+        }
+        public async ValueTask DisposeAsync()
+        {
+            await hubConnection.DisposeAsync();
         }
         private async void ChangeTheme(object value)
         {
@@ -106,7 +149,7 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-                if(attachment != null && attachment?.FileContent != null)
+                if (attachment != null && attachment?.FileContent != null)
                 {
                     IsLoading = true;
                     StudentNumber = $"{random.Next(1000) + 1:D4}";
@@ -152,7 +195,7 @@ namespace StudentApp.Components.Pages
                         Duration = 4000
                     });
                 }
-               
+
             }
             catch (Exception ex)
             {
@@ -285,12 +328,12 @@ namespace StudentApp.Components.Pages
             StateHasChanged();
         }
         private IBrowserFile? selectedFile;
-        private string? fileContent;
+        private readonly string? fileContent;
         private async void OnFileInput(InputFileChangeEventArgs args)
         {
             long maxFileSize = 5 * 1024 * 1024;
             selectedFile = args.File;
-            if(selectedFile.Size > maxFileSize)
+            if (selectedFile.Size > maxFileSize)
             {
                 ShowNotification(new NotificationMessage
                 {
@@ -324,44 +367,42 @@ namespace StudentApp.Components.Pages
                     Duration = 4000
                 });
             }
-          
+
 
         }
-        private async Task ViewSingleAttachedDocument(int? attchmentId)
+        private async Task ViewSingleAttachedDocument(int? attachmentId)
         {
             try
             {
-                if (attachments != null)
+                Attachment attachment = await AttachmentService.GetAttachmentById(attachmentId);
+                if (attachment != null)
                 {
-                    IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attchmentId);
-                    foreach (var attachment in _attachments)
+
+                    if (attachment.FileContent != null && attachment.FileContent.Length > 0)
                     {
-                        if (attachment.FileContent != null && attachment.FileContent.Length > 0)
+                        documentContent = attachment.FileContent;
+                        documentMimeType = attachment.FileType;
+
+                        // Open the dialog
+
+                    };
+                    if (attachment.FileContent != null)
+                        using (MemoryStream stream = new MemoryStream(attachment.FileContent))
                         {
-                            documentContent = attachment.FileContent;
-                            documentMimeType = attachment.FileType;
 
-                            // Open the dialog
+                            stream.Position = 0;
 
-                        };
-                        if (attachment.FileContent != null)
-                            using (MemoryStream stream = new MemoryStream(attachment.FileContent))
-                            {
-
-                                stream.Position = 0;
-
-                                await DialogService.OpenAsync<DocumentViewer>("Attachment",
-                            new Dictionary<string, object?>()
-                            {
+                            await DialogService.OpenAsync<DocumentViewer>("Attachment",
+                        new Dictionary<string, object?>()
+                        {
                               {"DocumentContent", documentContent},
                               {"DocumentMimeType", documentMimeType},
-                            },
-                            new DialogOptions() { Width = "1400px", Height = "840px", Resizable = true, Draggable = true });
+                        },
+                        new DialogOptions() { Width = "1400px", Height = "840px", Resizable = true, Draggable = true });
 
-                            }
-                    }
+                        }
                 }
-                else 
+                else
                 {
                     ShowNotification(new NotificationMessage
                     {
@@ -387,17 +428,15 @@ namespace StudentApp.Components.Pages
         {
             try
             {
-                if(attachments != null)
+                Attachment attachment = await AttachmentService.GetAttachmentById(attachmentId);
+                if (attachment != null)
                 {
-                    IEnumerable<Attachment> _attachments = attachments.Where(at => at.Id == attachmentId);
-                    foreach (var attachment in _attachments)
+
+                    var mimeType = "application/octet-stream";
+                    using (MemoryStream stream = new MemoryStream(attachment.FileContent))
                     {
-                        var mimeType = "application/octet-stream";
-                        using (MemoryStream stream = new MemoryStream(attachment.FileContent))
-                        {
-                            stream.Position = 0;
-                            await JSRuntime.InvokeVoidAsync("downloadFile", attachment.FileName, mimeType, attachment.FileContent);
-                        }
+                        stream.Position = 0;
+                        await JSRuntime.InvokeVoidAsync("downloadFile", attachment.FileName, mimeType, attachment.FileContent);
                     }
                 }
                 else
@@ -421,15 +460,6 @@ namespace StudentApp.Components.Pages
                     Duration = 4000
                 });
             }
-        }
-        void OnChange(UploadChangeEventArgs args, string name)
-        {
-            foreach (var file in args.Files)
-            {
-                //console.Log($"File: {file.Name} / {file.Size} bytes");
-            }
-
-            //console.Log($"{name} changed");
         }
         //async Task ShowBusyDialog(bool withMessageAsString)
         //{

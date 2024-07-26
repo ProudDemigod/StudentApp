@@ -14,19 +14,19 @@ namespace StudentApp.Services
         {
             _httpClient = httpClient;
         }
-        public async Task<IEnumerable<Student>?> GetStudentsAsync()
+        public async Task<List<Student>?> GetStudentsAsync()
         {
             try
             {
                 var request = await _httpClient.GetAsync("api/students");
                 if (request.IsSuccessStatusCode)
                 {
-                    return await request.Content.ReadFromJsonAsync<IEnumerable<Student>>();
+                    return await request.Content.ReadFromJsonAsync<List<Student>>();
 
                 }
                 else
                 {
-                    return Enumerable.Empty<Student>();
+                    throw new Exception("Student Record Not Found");
                 }
             }
             catch (Exception)

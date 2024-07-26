@@ -100,12 +100,12 @@ else
     </RadzenTemplateForm>
     <RadzenText Text="@AttachmentInfo" @bind-value="@AttachmentInfo" />
     <RadzenProgressBar Value="100" Visible="IsLoading" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-    @if ((programs != null && programs.Any()) && (attachments != null && attachments.Any()))
+    @if ((programs != null && programs.Any()))
     {
         <RadzenStack Style="margin-top:15px; margin-bottom: 15px">
-            <RadzenDataGrid AllowRowSelectOnRowClick="@allowRowSelectOnRowClick" @bind-Value=@selectedStudents SelectionMode="DataGridSelectionMode.Multiple" AllowColumnReorder="false" AllowColumnResize="true" AllowPaging="true" AllowFiltering="true" FilterIcon="filter" AllowColumnPicking="true" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" PageSize="5" Data="students" @ref="StudentDataGrid" TItem="Student">
+            <RadzenDataGrid AllowRowSelectOnRowClick="@allowRowSelectOnRowClick" @bind-Value=@selectedStudents SelectionMode="DataGridSelectionMode.Multiple" AllowColumnReorder="false" AllowColumnResize="true" AllowPaging="true" AllowFiltering="true" FilterIcon="filter" AllowColumnPicking="true" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" PageSize="8" Data="students" @ref="StudentDataGrid" TItem="Student">
                 <Columns>
-                    <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">
+                    <RadzenDataGridColumn Width="50px" Sortable="false" Filterable="false">
                         <HeaderTemplate>
                             <RadzenCheckBox TabIndex="-1" TriState="false" TValue="bool?" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select all items" }})"
                                             Value="@(selectedStudents == null || selectedStudents?.Any() != true ? false : !students.All(i => selectedStudents.Contains(i)) ? null : students.Any(i => selectedStudents.Contains(i)))"
@@ -116,34 +116,34 @@ else
                                             TValue="bool" Change=@(args => { if(!allowRowSelectOnRowClick) { StudentDataGrid?.SelectRow(data); }}) />
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Student" Property="FirstName" Title="First Name" />
-                    <RadzenDataGridColumn TItem="Student" Property="LastName" Title="Last Name" />
-                    <RadzenDataGridColumn TItem="Student" FilterValue="@nrcValue" Filterable="true" Property="Nrc" Title="Personal ID">
+                    <RadzenDataGridColumn Width="100px" TItem="Student" Property="FirstName" Title="First Name" />
+                    <RadzenDataGridColumn  Width="100px" TItem="Student" Property="LastName" Title="Last Name" />
+                    <RadzenDataGridColumn Width="100px" TItem="Student" FilterValue="@nrcValue" Filterable="true" Property="Nrc" Title="Personal ID">
                         <FilterTemplate>
                             <RadzenNumeric @bind-Value=nrcValue ShowUpDown=false Style="width:100%" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "filter by ID" }})" />
                         </FilterTemplate>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Student" Property="Address" Title="Address" />
-                    <RadzenDataGridColumn TItem="Student" Property="PhoneNumber" Title="Phone Number" />
-                    <RadzenDataGridColumn TItem="Student" Property="Program" Title="Program">
+                    <RadzenDataGridColumn  Width="150px" TItem="Student" Property="Address" Title="Address" />
+                    <RadzenDataGridColumn  Width="100px" TItem="Student" Property="PhoneNumber" Title="Phone Number" />
+                    <RadzenDataGridColumn Width="100px" TItem="Student" Property="Program" Title="Program">
                         <Template>
                             @(programs?.First(p => p.Id == context.ProgramId).Name)
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Student" Property="StudentId" Title="Student Number" />
-                    <RadzenDataGridColumn TItem="Student" Property="DateCreated" Title="Date Created" />
-                    <RadzenDataGridColumn Filterable="false" TItem="Student" Property="Attachment" Title="Attachment">
+                    <RadzenDataGridColumn  Width="60px" TItem="Student" Property="StudentId" Title="Student Number" />
+                    <RadzenDataGridColumn  Width="150px" TItem="Student" Property="DateCreated" Title="Date Created" />
+                    <RadzenDataGridColumn Width="150px" Filterable="false" TItem="Student" Property="Attachment" Title="Attachment">
                         <Template>
                             <RadzenIcon Style="cursor:pointer;" @onclick="(()=>ViewSingleAttachedDocument(context.AttchmentId))" Icon="file_open" IconColor="@Colors.InfoLight" />
                             <RadzenIcon Style="cursor:pointer; margin-left: 20px" @onclick="(()=>DownloadSingleAttachedDocument(context.AttchmentId))" Icon="download" IconColor="@Colors.Primary" />
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Pickable="false" Title="Edit">
+                    <RadzenDataGridColumn Width="60px" Pickable="false" Title="Edit">
                         <Template>
                             <RadzenIcon Style="cursor:pointer" @onclick="(()=>OpenEditDialog(context, context.Id))" Icon="edit" IconColor="@Colors.InfoLight" />
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Pickable="false" Title="Delete">
+                    <RadzenDataGridColumn Width="60px" Pickable="false" Title="Delete">
                         <Template>
                             <RadzenIcon @onclick="(()=>DeleteStudent(context.Id))" Style="cursor:pointer" Icon="delete" IconColor="@Colors.Danger" />
                         </Template>
