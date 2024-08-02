@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Radzen;
 using StudentApp.Models;
 using StudentApp.Services;
+using System;
 
 namespace StudentApp.Components.Dialogs
 {
@@ -28,14 +30,20 @@ namespace StudentApp.Components.Dialogs
         public IEnumerable<Programs>? Programs { get; set; }
         [Parameter]
         public string StudentId { get; set; } = default!;
+        [Parameter]
+        public int attachmentId { get; set; } = default!;  
         #endregion
         #region Srvices
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] StudentService StudentService { get; set; } = default!;
         [Inject] private NotificationService NotificationService { get; set; } = default!;
+        [Inject] AttachmentService AttachmentService { get; set; } = default!;
         #endregion
         private Student Student = new Student();
         private bool popup;
+        bool value;
+        private IBrowserFile? selectedFile;
+        private Attachment? attachment;
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
@@ -45,6 +53,14 @@ namespace StudentApp.Components.Dialogs
             Student.PhoneNumber = PhoneNumber;
             Student.Nrc = NRC;
             Student.ProgramId = ProgramId;
+        }
+
+        void OnChange(bool value, string name)
+        {
+            if(!value)
+            {
+                attachment = new Attachment();
+            }
         }
         public async Task EditAsync()
         {
@@ -63,6 +79,16 @@ namespace StudentApp.Components.Dialogs
                         var LastName = TrimInput(Student.LastName);
                         Student.FirstName = FirstName;
                         Student.LastName = LastName;
+                        Student.AttchmentId = attachmentId;
+                        //Student.Attachment = attachment;
+                       
+                        if(attachment != null)
+                        {
+                            attachment.Id = attachmentId;
+                            await AttachmentService.UpdateAttachmentAsync(attachmentId, attachment);
+                            ShowNotification(new NotificationMessage
+                            { Severity = NotificationSeverity.Success, Summary = "Success", Detail = "Attachment Updated Successfully!", Duration = 2000 });
+                        }
                         await StudentService.UpdateStudentAsync(Id, Student);
                         Student = new Student();
                         await InvokeAsync(UpdateUI);
@@ -109,6 +135,47 @@ namespace StudentApp.Components.Dialogs
         {
             var inputValue = value?.ToString().Trim() ?? string.Empty;
             return inputValue;
+        }
+        private async void OnFileInput(InputFileChangeEventArgs args)
+        {
+            long maxFileSize = 5 * 1024 * 1024;
+            selectedFile = args.File;
+            if (selectedFile.Size > maxFileSize)
+            {
+                ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Warning",
+                    Detail = "File size is greater that max allowed\n Please select a different file",
+                    Duration = 4000
+                });
+                attachment = new Attachment();
+            }
+            else
+            {
+                attachment = new Attachment
+                {
+                    FileName = selectedFile.Name,
+                    FileType = selectedFile.ContentType,
+                };
+                using (var stream = selectedFile.OpenReadStream(maxFileSize))
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await stream.CopyToAsync(memoryStream);
+                        attachment.FileContent = memoryStream.ToArray();
+                    }
+                }
+                ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Success",
+                    Detail = "File successfully selected",
+                    Duration = 4000
+                });
+            }
+
+
         }
     }
 }

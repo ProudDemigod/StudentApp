@@ -12,10 +12,10 @@
             </RadzenFormField>
         </RadzenColumn>
         <RadzenColumn Size="6" SizeSM="6">
-              <RadzenFormField Text="Last Name" Style="width: 100%;">
-                  <ChildContent>
+            <RadzenFormField Text="Last Name" Style="width: 100%;">
+                <ChildContent>
                     <RadzenTextBox Name="LastName" @bind-Value="Student.LastName" Style="width:100%;" />
-                      </ChildContent>
+                </ChildContent>
                 <Helper>
                     <RadzenRequiredValidator Component="LastName" Text="Last Name is required" Popup=@popup Style="position: absolute" />
                 </Helper>
@@ -61,6 +61,20 @@
                 </Helper>
             </RadzenFormField>
         </RadzenColumn>
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenLabel Style="margin:5px" Text="Update Attachment?" Component="Switch" />
+            <RadzenSwitch Name="Switch" @bind-Value=@value Change=@(args => OnChange(args, "Switch")) InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Switch value" }})" />
+        </RadzenColumn>
+        @if(value)
+        {
+            <RadzenColumn Style="padding:2px" Size="12" SizeSM="12">
+                <div>
+                    <RadzenCard>
+                        <InputFile OnChange="OnFileInput" />
+                    </RadzenCard>
+                </div>
+            </RadzenColumn>
+        }
         <RadzenColumn Size="6" SizeSM="6">
             <RadzenButton Style="width:100%" Click="ClearFields" ButtonStyle="ButtonStyle.Light" Text="Clear" />
         </RadzenColumn>

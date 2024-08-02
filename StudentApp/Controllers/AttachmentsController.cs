@@ -70,6 +70,7 @@ namespace StudentApp.Controllers
             }
 
         }
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAsync(int id, Attachment attachment)
         {
             if (id != attachment.Id)
