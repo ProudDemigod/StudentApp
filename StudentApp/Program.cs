@@ -16,7 +16,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddRadzenComponents();
 builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5221/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7083/") });
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<ProgramsService>();
 builder.Services.AddScoped<StorageHelper>();

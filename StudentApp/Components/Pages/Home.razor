@@ -140,7 +140,7 @@ else
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn Width="60px" Pickable="false" Title="Edit">
                         <Template>
-                            <RadzenIcon Style="cursor:pointer" @onclick="(()=>OpenEditDialog(context, context.Id))" Icon="edit" IconColor="@Colors.InfoLight" />
+                            <RadzenIcon Style="cursor:pointer" @onclick="(()=>OpenEditDialog(context, context.Id, context.AttchmentId))" Icon="edit" IconColor="@Colors.InfoLight" />
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn Width="60px" Pickable="false" Title="Delete">

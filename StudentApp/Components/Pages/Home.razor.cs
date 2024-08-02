@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
 using Radzen;
@@ -8,8 +9,6 @@ using StudentApp.Components.Dialogs;
 using StudentApp.JSServices;
 using StudentApp.Models;
 using StudentApp.Services;
-using Microsoft.AspNetCore.SignalR.Client;
-using System.Text.Json;
 namespace StudentApp.Components.Pages
 {
     public partial class Home
@@ -69,12 +68,12 @@ namespace StudentApp.Components.Pages
                  .WithUrl(Navigation.ToAbsoluteUri("/studenthub"))
                  .Build();
 
-                hubConnection.On<Student>("ReceiveStudentData", (updatedStudent) =>
+                _ = hubConnection.On<Student>("ReceiveStudentData", (updatedStudent) =>
                 {
                     var existingStudent = students?.FirstOrDefault(s => s.Id == updatedStudent.Id);
                     if (existingStudent != null)
                     {
-                        students?.Remove(existingStudent);
+                        _ = (students?.Remove(existingStudent));
                         students?.Add(updatedStudent);
                         students = students?.OrderByDescending(st => st.Id).ToList();
                     }
@@ -83,22 +82,22 @@ namespace StudentApp.Components.Pages
                         students?.Add(updatedStudent);
                         students = students?.OrderByDescending(st => st.Id).ToList();
                     }
-                    InvokeAsync(StateHasChanged);
+                    _ = InvokeAsync(StateHasChanged);
                 });
-                hubConnection.On<int>("StudentDeleted", (studentId) =>
+                _ = hubConnection.On<int>("StudentDeleted", (studentId) =>
                 {
                     var student = students?.FirstOrDefault(s => s.Id == studentId);
                     if (student != null)
                     {
-                        students?.Remove(student);
+                        _ = (students?.Remove(student));
                         students = students?.OrderByDescending(st => st.Id).ToList();
                     }
-                    InvokeAsync(StateHasChanged);
+                    _ = InvokeAsync(StateHasChanged);
                 });
                 await hubConnection.StartAsync();
                 Theme = ThemeValue;
                 await base.OnInitializedAsync();
-               
+
                 programs = await ProgramsService.GetProgramsAsync();
                 students = students?.OrderByDescending(st => st.Id).ToList();
                 //attachments = await AttachmentService.GetAttachmentsAsync();
@@ -233,7 +232,7 @@ namespace StudentApp.Components.Pages
             ThemeValue = await storageHelper.GetLocalStorage("Theme");
             return ThemeValue;
         }
-        private async Task OpenEditDialog(Student student, int Id)
+        private async Task OpenEditDialog(Student student, int Id, int? attachmentId)
         {
             await DialogService.OpenAsync<EditDialog>($"Editing - {student.FirstName} {student.LastName} - {student.StudentId}",
                          new Dictionary<string, object?>()
@@ -247,6 +246,7 @@ namespace StudentApp.Components.Pages
                               {"Programs", programs},
                               {"StudentId", student.StudentId},
                               {"Id", Id},
+                              {"attachmentId", attachmentId},
                               {"UpdateUI", (Action)UpdateUI},
                          },
                          new DialogOptions() { Width = "1400px", Height = "max-content", Resizable = true, Draggable = true });
