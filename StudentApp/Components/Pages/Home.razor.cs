@@ -23,7 +23,7 @@ namespace StudentApp.Components.Pages
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] AttachmentService AttachmentService { get; set; } = default!;
         [Inject] NavigationManager Navigation { get; set; } = default!;
-        private HubConnection hubConnection;
+        private HubConnection hubConnection = default!;
         #endregion
         #region List
         private IEnumerable<Programs>? programs = new List<Programs>();
@@ -37,24 +37,30 @@ namespace StudentApp.Components.Pages
         private string StudentNumber = string.Empty;
         private Attachment? attachment;
         #endregion
-        RadzenDataGrid<Student>? StudentDataGrid;
-        private bool IsLoading;
-        readonly DataGridEditMode editMode = DataGridEditMode.Single;
+        #region Strings
         private string Theme = "Default";
         private string ThemeValue = string.Empty;
         private readonly bool popup;
         private readonly double value;
         private string AttachmentInfo = string.Empty;
-        private readonly bool visible;
         private string? nrcValue;
-        readonly RadzenDataGrid<Student>? grid;
+        string? documentMimeType;
+        #endregion
+        #region Bool
+        private bool IsLoading;
+        private readonly bool visible;
         readonly bool allowRowSelectOnRowClick = false;
+        readonly bool cancelUpload = false;
+        #endregion
+        #region Radzen
+        readonly RadzenDataGrid<Student>? grid;
+        RadzenDataGrid<Student>? StudentDataGrid;
         readonly RadzenUpload? upload;
         readonly RadzenUpload? uploadDD;
-        byte[]? documentContent;
-        string? documentMimeType;
+        #endregion
+        readonly DataGridEditMode editMode = DataGridEditMode.Single;
 
-        readonly bool cancelUpload = false;
+        byte[]? documentContent;
         private readonly List<string> Themes = new List<string>
         {
             "Default", "Standard", "Dark", "Material", "Humanistic"
@@ -100,7 +106,6 @@ namespace StudentApp.Components.Pages
 
                 programs = await ProgramsService.GetProgramsAsync();
                 students = students?.OrderByDescending(st => st.Id).ToList();
-                //attachments = await AttachmentService.GetAttachmentsAsync();
             }
             catch (Exception ex)
             {
@@ -461,46 +466,5 @@ namespace StudentApp.Components.Pages
                 });
             }
         }
-        //async Task ShowBusyDialog(bool withMessageAsString)
-        //{
-        //    InvokeAsync(async () =>
-        //    {
-        //        // Simulate background task
-        //        await Task.Delay(2000);
-
-        //        // Close the dialog
-        //        DialogService.Close();
-        //    });
-
-        //    if (withMessageAsString)
-        //    {
-        //        await BusyDialog("Loading ...");
-        //    }
-        //    //else
-        //    //{
-        //    //    await BusyDialog();
-        //    //}
-        //}
-
-        //// Busy dialog from string
-        //async Task BusyDialog(string message)
-        //{
-        //    await DialogService.OpenAsync("", ds =>
-        //    {
-        //        RenderFragment content = b =>
-        //        {
-        //            b.OpenElement(0, "RadzenRow");
-
-        //            b.OpenElement(1, "RadzenColumn");
-        //            b.AddAttribute(2, "Size", "12");
-
-        //            b.AddContent(3, message);
-
-        //            b.CloseElement();
-        //            b.CloseElement();
-        //        };
-        //        return content;
-        //    }, new DialogOptions() { ShowTitle = false, Style = "min-height:auto;min-width:auto;width:auto", CloseDialogOnEsc = false });
-        //}
     }
 }
