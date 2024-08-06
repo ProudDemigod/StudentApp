@@ -151,7 +151,7 @@ namespace StudentApp.Components.Dialogs
                     Detail = "File size is greater that max allowed\n Please select a different file",
                     Duration = 4000
                 });
-                attachment = new Attachment();
+                attachment = null;
             }
             else
             {
@@ -159,7 +159,9 @@ namespace StudentApp.Components.Dialogs
                 {
                     FileName = selectedFile.Name,
                     FileType = selectedFile.ContentType,
+                    DateCreate = DateTime.Now,
                 };
+                AttachmentName = selectedFile.Name;
                 using (var stream = selectedFile.OpenReadStream(maxFileSize))
                 {
                     using (var memoryStream = new MemoryStream())

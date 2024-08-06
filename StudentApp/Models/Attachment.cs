@@ -24,7 +24,7 @@ public partial class Attachment
     public byte[] FileContent { get; set; }
 
     [Column(TypeName = "datetime")]
-    public DateTime? DateCreate { get; set; } = DateTime.Now;
+    public DateTime? DateCreate { get; set; } 
 
     [InverseProperty("Attachment")]
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
