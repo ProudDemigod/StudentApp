@@ -58,6 +58,7 @@ namespace StudentApp.Components.Pages
         readonly RadzenUpload? upload;
         readonly RadzenUpload? uploadDD;
         #endregion
+        int maxLength = 100;
         readonly DataGridEditMode editMode = DataGridEditMode.Single;
 
         byte[]? documentContent;
@@ -239,6 +240,7 @@ namespace StudentApp.Components.Pages
         }
         private async Task OpenEditDialog(Student student, int Id, int? attachmentId)
         {
+            var attachment = await AttachmentService.GetAttachmentById(attachmentId);
             await DialogService.OpenAsync<EditDialog>($"Editing - {student.FirstName} {student.LastName} - {student.StudentId}",
                          new Dictionary<string, object?>()
                          {
@@ -252,6 +254,7 @@ namespace StudentApp.Components.Pages
                               {"StudentId", student.StudentId},
                               {"Id", Id},
                               {"attachmentId", attachmentId},
+                              {"AttachmentName", attachment.FileName},
                               {"UpdateUI", (Action)UpdateUI},
                          },
                          new DialogOptions() { Width = "1400px", Height = "max-content", Resizable = true, Draggable = true });
@@ -375,11 +378,40 @@ namespace StudentApp.Components.Pages
 
 
         }
+        public static string TruncateString(string input, int maxLength)
+        {
+            if (string.IsNullOrEmpty(input) || maxLength <= 0)
+            {
+                return string.Empty;
+            }
+
+            // If the string is already shorter than the max length, return it as is.
+            if (input.Length <= maxLength)
+            {
+                return input;
+            }
+
+            // Determine the suffix, which is the last 5 characters of the original string
+            string suffix = input.Length > 5 ? input.Substring(input.Length - 5) : input;
+
+            // Calculate the maximum length of the truncated string without exceeding the total maxLength
+            int maxStringLength = maxLength - suffix.Length;
+
+            // Ensure maxStringLength is not negative, indicating maxLength is too small to fit any part of the input
+            if (maxStringLength <= 0)
+            {
+                return suffix.Substring(0, maxLength);
+            }
+
+            // Return the truncated string with the suffix
+            return input.Substring(0, maxStringLength) + "..." + suffix;
+        }
         private async Task ViewSingleAttachedDocument(int? attachmentId)
         {
             try
             {
                 Attachment attachment = await AttachmentService.GetAttachmentById(attachmentId);
+                var fileName = TruncateString(attachment.FileName, maxLength); 
                 if (attachment != null)
                 {
 
@@ -397,7 +429,7 @@ namespace StudentApp.Components.Pages
 
                             stream.Position = 0;
 
-                            await DialogService.OpenAsync<DocumentViewer>("Attachment",
+                            await DialogService.OpenAsync<DocumentViewer>($"Attachment - {fileName}",
                         new Dictionary<string, object?>()
                         {
                               {"DocumentContent", documentContent},

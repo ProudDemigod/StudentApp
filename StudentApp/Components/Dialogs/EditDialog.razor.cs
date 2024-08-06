@@ -33,7 +33,7 @@ namespace StudentApp.Components.Dialogs
         [Parameter]
         public int attachmentId { get; set; } = default!;  
         #endregion
-        #region Srvices
+        #region Services
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] StudentService StudentService { get; set; } = default!;
         [Inject] private NotificationService NotificationService { get; set; } = default!;
@@ -44,6 +44,8 @@ namespace StudentApp.Components.Dialogs
         bool value;
         private IBrowserFile? selectedFile;
         private Attachment? attachment;
+        [Parameter]
+        public string AttachmentName { get; set; } = default!;
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();

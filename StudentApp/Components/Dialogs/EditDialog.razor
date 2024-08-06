@@ -64,6 +64,7 @@
         <RadzenColumn Size="12" SizeSM="12">
             <RadzenLabel Style="margin:5px" Text="Update Attachment?" Component="Switch" />
             <RadzenSwitch Name="Switch" @bind-Value=@value Change=@(args => OnChange(args, "Switch")) InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Switch value" }})" />
+            <RadzenText Style="margin-right: 10px; display:inline" Text="@AttachmentName" />
         </RadzenColumn>
         @if(value)
         {
