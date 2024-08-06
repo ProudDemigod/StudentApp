@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 <RadzenComponents />
-<div class="page">
+@* <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -10,10 +10,36 @@
             @Body
         </article>
     </main>
-</div>
+</div> *@
+<RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+            <RadzenLabel Text="@CurrentPage" />
+        </RadzenStack>
+    </RadzenHeader>
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded">
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[0], ThemeValue)" Text="Home" Icon="home" />
+            <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[1], ThemeValue)" Text="Counter" Icon="account_box" />
+            <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[2], ThemeValue)" Text="Weather" Icon="account_box" />
+        </RadzenPanelMenu>
+        <div class="rz-p-4">
+            Sidebar
+        </div>
+    </RadzenSidebar>
+    <RadzenBody>
+        <div class="rz-p-4">
+            @Body
+        </div>
+    </RadzenBody>
+</RadzenLayout>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+
+

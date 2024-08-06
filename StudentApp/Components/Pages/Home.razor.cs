@@ -58,6 +58,8 @@ namespace StudentApp.Components.Pages
         readonly RadzenUpload? upload;
         readonly RadzenUpload? uploadDD;
         #endregion
+        [Parameter]
+        public string PageTheme { get; set; } = default!;
         int maxLength = 100;
         readonly DataGridEditMode editMode = DataGridEditMode.Single;
 
@@ -103,6 +105,7 @@ namespace StudentApp.Components.Pages
                 });
                 await hubConnection.StartAsync();
                 Theme = ThemeValue;
+                PageTheme = ThemeValue;
                 await base.OnInitializedAsync();
 
                 programs = await ProgramsService.GetProgramsAsync();
