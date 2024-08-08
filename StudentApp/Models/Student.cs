@@ -40,7 +40,9 @@ public partial class Student
     public int? ProgramId { get; set; }
 
     [Column(TypeName = "datetime")]
-    public DateTime? DateCreated { get; set; } = DateTime.Now;
+    public DateTime? DateCreated { get; set; }
+    [Column(TypeName = "datetime")]
+    public DateTime? LastModified { get; set; }
 
     public int? AttchmentId { get; set; }
 

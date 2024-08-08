@@ -31,7 +31,9 @@ namespace StudentApp.Components.Dialogs
         [Parameter]
         public string StudentId { get; set; } = default!;
         [Parameter]
-        public int attachmentId { get; set; } = default!;  
+        public int attachmentId { get; set; } = default!;
+        [Parameter]
+        public DateTime DateCreated { get; set; } = default!;  
         #endregion
         #region Services
         [Inject] DialogService DialogService { get; set; } = default!;
@@ -91,6 +93,8 @@ namespace StudentApp.Components.Dialogs
                             ShowNotification(new NotificationMessage
                             { Severity = NotificationSeverity.Success, Summary = "Success", Detail = "Attachment Updated Successfully!", Duration = 2000 });
                         }
+                        Student.DateCreated = DateCreated;
+                        Student.LastModified = DateTime.Now;
                         await StudentService.UpdateStudentAsync(Id, Student);
                         Student = new Student();
                         await InvokeAsync(UpdateUI);

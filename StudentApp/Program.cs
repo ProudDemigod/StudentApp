@@ -21,6 +21,7 @@ builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<ProgramsService>();
 builder.Services.AddScoped<StorageHelper>();
 builder.Services.AddScoped<AttachmentService>();
+builder.Services.AddScoped<ExcelExportService>();
 builder.Services.AddSignalR();
 var app = builder.Build();
 

@@ -98,7 +98,9 @@ else
                 </RadzenRow>
             </RadzenFieldset>
         </RadzenStack>
+@*         <RadzenButton Text="Busy Dialog with a string message" ButtonStyle="ButtonStyle.Secondary" Click=@(args => ShowBusyDialog(true)) /> *@
     </RadzenTemplateForm>
+    @* <RadzenButton Text="Export to Excel" Variant="Variant.Outlined" Size="ButtonSize.Large" Style="margin: 12px" Icon="export_notes" Click="ExportToExcel" /> *@
     <RadzenText Text="@AttachmentInfo" @bind-value="@AttachmentInfo" />
     <RadzenProgressBar Value="100" Visible="IsLoading" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
     @if ((programs != null && programs.Any()))
@@ -133,6 +135,7 @@ else
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn  Width="60px" TItem="Student" Property="StudentId" Title="Student Number" />
                     <RadzenDataGridColumn  Width="150px" TItem="Student" Property="DateCreated" Title="Date Created" />
+                    <RadzenDataGridColumn Width="150px" TItem="Student" Visible="false" Property="LastModified" Title="Last Modified" />
                     <RadzenDataGridColumn Width="150px" Filterable="false" TItem="Student" Property="Attachment" Title="Attachment">
                         <Template>
                             <RadzenIcon Style="cursor:pointer;" @onclick="(()=>ViewSingleAttachedDocument(context.AttchmentId))" Icon="file_open" IconColor="@Colors.InfoLight" />
