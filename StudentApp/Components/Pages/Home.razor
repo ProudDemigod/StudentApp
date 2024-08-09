@@ -100,6 +100,13 @@ else
         </RadzenStack>
 @*         <RadzenButton Text="Busy Dialog with a string message" ButtonStyle="ButtonStyle.Secondary" Click=@(args => ShowBusyDialog(true)) /> *@
     </RadzenTemplateForm>
+    <RadzenColumn Style="padding:2px" Size="6" SizeSM="6">
+        <div>
+            <RadzenCard>
+                <InputFile OnChange="HandleFileSelected" />
+            </RadzenCard>
+        </div>
+    </RadzenColumn>
     @* <RadzenButton Text="Export to Excel" Variant="Variant.Outlined" Size="ButtonSize.Large" Style="margin: 12px" Icon="export_notes" Click="ExportToExcel" /> *@
     <RadzenText Text="@AttachmentInfo" @bind-value="@AttachmentInfo" />
     <RadzenProgressBar Value="100" Visible="IsLoading" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />

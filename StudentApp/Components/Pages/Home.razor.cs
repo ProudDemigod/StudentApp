@@ -9,6 +9,8 @@ using StudentApp.Components.Dialogs;
 using StudentApp.JSServices;
 using StudentApp.Models;
 using StudentApp.Services;
+using System.Net.Http;
+using System.Net.Http.Headers;
 namespace StudentApp.Components.Pages
 {
     public partial class Home
@@ -23,7 +25,8 @@ namespace StudentApp.Components.Pages
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] AttachmentService AttachmentService { get; set; } = default!;
         [Inject] NavigationManager Navigation { get; set; } = default!;
-        [Inject] ExcelExportService ExcelExportService {  get; set; } = default!;    
+        [Inject] ExcelExportService ExcelExportService { get; set; } = default!;
+        [Inject] HttpClient httpClient { get; set; } = default!;
         //[Inject] NorthwindService service { get; set; } = default!;
         private HubConnection hubConnection = default!;
         #endregion
@@ -136,7 +139,7 @@ namespace StudentApp.Components.Pages
             //var gridData = await StudentDataGrid.LoadData();
             //var gridData = await dataGrid.GetDataAsync();
             var excelBytes = ExcelExportService.ExportToExcel(students);
-           
+
 
             var fileName = "export.xlsx";
 
@@ -459,8 +462,6 @@ namespace StudentApp.Components.Pages
                     Duration = 4000
                 });
             }
-
-
         }
         public static string TruncateString(string input, int maxLength)
         {
@@ -583,5 +584,42 @@ namespace StudentApp.Components.Pages
                 });
             }
         }
+        private async Task HandleFileSelected(InputFileChangeEventArgs e)
+        {
+            var file = e.File;
+            Guid attachmentId = Guid.NewGuid(); // Generate a unique ID for the attachment
+
+            string uploadFolder = Path.Combine("Uploads", attachmentId.ToString());
+            if (!Directory.Exists(uploadFolder))
+            {
+                Directory.CreateDirectory(uploadFolder);
+            }
+
+            string filePath = Path.Combine(uploadFolder, file.Name);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.OpenReadStream().CopyToAsync(fileStream);
+            }
+
+            // Save file path to the database
+            //await SaveFilePathToDatabase(attachmentId, file.Name, filePath);
+        }
+
+        //private async Task SaveFilePathToDatabase(Guid attachmentId, string fileName, string filePath)
+        //{
+        //    using (var context = new YourDbContext())
+        //    {
+        //        var attachment = new Attachment
+        //        {
+        //            AttachmentId = attachmentId,
+        //            FileName = fileName,
+        //            FilePath = filePath
+        //        };
+
+        //        context.Attachments.Add(attachment);
+        //        await context.SaveChangesAsync();
+        //    }
+        //}
     }
 }

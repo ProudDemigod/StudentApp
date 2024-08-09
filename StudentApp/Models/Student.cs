@@ -41,12 +41,19 @@ public partial class Student
 
     [Column(TypeName = "datetime")]
     public DateTime? DateCreated { get; set; }
+
     [Column(TypeName = "datetime")]
     public DateTime? LastModified { get; set; }
 
     public int? AttchmentId { get; set; }
 
+    public int? AttatchedFileId { get; set; }
+
+    [ForeignKey("AttatchedFileId")]
+    [InverseProperty("Students")]
+    public virtual AttachmentFile AttatchedFile { get; set; }
+
     [ForeignKey("AttchmentId")]
     [InverseProperty("Students")]
-    public virtual Attachment Attachment { get; set; }
+    public virtual Attachment Attchment { get; set; }
 }

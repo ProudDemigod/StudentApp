@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace StudentApp.Models;
 
-[Table("Attachment")]
-public partial class Attachment
+[Table("AttachmentFile")]
+public partial class AttachmentFile
 {
     [Key]
     public int Id { get; set; }
@@ -17,15 +17,11 @@ public partial class Attachment
     [Unicode(false)]
     public string FileName { get; set; }
 
-    [StringLength(100)]
     [Unicode(false)]
-    public string FileType { get; set; }
+    public string FilePath { get; set; }
 
-    public byte[] FileContent { get; set; }
+    public Guid? FileId { get; set; }
 
-    [Column(TypeName = "datetime")]
-    public DateTime? DateCreate { get; set; }
-
-    [InverseProperty("Attchment")]
+    [InverseProperty("AttatchedFile")]
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
 }

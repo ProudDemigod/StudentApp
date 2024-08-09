@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Radzen;
 using StudentApp.Components;
 using StudentApp.Hubs;
@@ -22,6 +23,24 @@ builder.Services.AddScoped<ProgramsService>();
 builder.Services.AddScoped<StorageHelper>();
 builder.Services.AddScoped<AttachmentService>();
 builder.Services.AddScoped<ExcelExportService>();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "StudentApp", Version = "v1" });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 builder.Services.AddSignalR();
 var app = builder.Build();
 
@@ -34,6 +53,15 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 app.UseHttpsRedirection();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "StudentApp");
+    c.RoutePrefix = "swagger";
+    c.DisplayOperationId();
+    c.DisplayRequestDuration(); ;
+});
 
 app.UseStaticFiles();
 app.UseAntiforgery();

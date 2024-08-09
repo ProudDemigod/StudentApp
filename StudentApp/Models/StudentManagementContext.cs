@@ -15,6 +15,8 @@ public partial class StudentManagementContext : DbContext
 
     public virtual DbSet<Attachment> Attachments { get; set; }
 
+    public virtual DbSet<AttachmentFile> AttachmentFiles { get; set; }
+
     public virtual DbSet<Course> Courses { get; set; }
 
     public virtual DbSet<Programs> Programs { get; set; }
@@ -30,7 +32,9 @@ public partial class StudentManagementContext : DbContext
 
         modelBuilder.Entity<Student>(entity =>
         {
-            entity.HasOne(d => d.Attachment).WithMany(p => p.Students).HasConstraintName("FK_Student_Attachment");
+            entity.HasOne(d => d.AttatchedFile).WithMany(p => p.Students).HasConstraintName("FK_Student_AttachmentFile");
+
+            entity.HasOne(d => d.Attchment).WithMany(p => p.Students).HasConstraintName("FK_Student_Attachment");
         });
 
         OnModelCreatingPartial(modelBuilder);
