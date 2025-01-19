@@ -11,16 +11,18 @@
         </article>
     </main>
 </div> *@
-<RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
-    <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-            <RadzenLabel Text="@CurrentPage" />
+<RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body': grid-template-rows:auto 1fr: grid-template-columns:auto 1fr">
+    <RadzenHeader Style="background-color:forestgreen; padding:5px">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
+            <div style="display: flex; align-items: center">
+                <RadzenSidebarToggle id="toggle" Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                    <img style="height:55px; width: 44px; margin-right:10px; " src="./NewMopaniLogo.png" />
+               @*  <RadzenLabel Text="@CurrentPage" /> *@
+            </div>
         </RadzenStack>
     </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@sidebarExpanded">
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Style="grid-area: rz-sidebar">
         <RadzenPanelMenu>
-            <RadzenPanelMenuItem Style="color: black; padding:5px; text-size-adjust:auto" Image="/NewMopaniLogo.png" Text="Mopani Copper Mines" />
             <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[0], ThemeValue)" Text="Home" Icon="home" />
             <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[1], ThemeValue)" Text="Counter" Icon="account_box" />
             <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[2], ThemeValue)" Text="Weather" Icon="account_box" />
@@ -29,7 +31,7 @@
             Sidebar
         </div>
     </RadzenSidebar>
-    <RadzenBody>
+    <RadzenBody Style="background-color:white; grid-area: rz-body">
         <div class="rz-p-4">
             @Body
         </div>
@@ -42,5 +44,9 @@
     <a class="dismiss">🗙</a>
 </div>
 
-
+<style>
+    #toggle:hover{
+       background-color: green
+    }
+</style>
 

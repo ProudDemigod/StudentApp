@@ -73,9 +73,9 @@ else
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="6" SizeSM="6">
-                        <RadzenFormField Text="Program" Style="width: 100%; padding-bottom: 2px;">
+                        <RadzenFormField Text="Program" Style="width: 100%;">
                             <ChildContent>
-                                <RadzenDropDown Style="margin:14px" Name="Program" TValue="int?" Data="@programs" TextProperty="Name" @bind-Value="Student.ProgramId" ValueProperty="Id" />
+                                <RadzenDropDown Style="margin-bottom:10px" Name="Program" TValue="int?" Data="@programs" TextProperty="Name" @bind-Value="Student.ProgramId" ValueProperty="Id" />
                             </ChildContent>
                             <Helper>
                                 <RadzenRequiredValidator Component="Program" Text="Program is required" Popup=@popup Style="position: absolute" />
