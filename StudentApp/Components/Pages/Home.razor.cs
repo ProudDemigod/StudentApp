@@ -9,6 +9,8 @@ using StudentApp.Components.Dialogs;
 using StudentApp.JSServices;
 using StudentApp.Models;
 using StudentApp.Services;
+using System.Net.Http;
+using System.Net.Http.Headers;
 namespace StudentApp.Components.Pages
 {
     public partial class Home
@@ -23,6 +25,9 @@ namespace StudentApp.Components.Pages
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] AttachmentService AttachmentService { get; set; } = default!;
         [Inject] NavigationManager Navigation { get; set; } = default!;
+        [Inject] ExcelExportService ExcelExportService { get; set; } = default!;
+        [Inject] HttpClient httpClient { get; set; } = default!;
+        //[Inject] NorthwindService service { get; set; } = default!;
         private HubConnection hubConnection = default!;
         #endregion
         #region List
@@ -58,12 +63,17 @@ namespace StudentApp.Components.Pages
         readonly RadzenUpload? upload;
         readonly RadzenUpload? uploadDD;
         #endregion
+        private IBrowserFile? selectedFile;
+        private readonly string? fileContent;
+        [Parameter]
+        public string PageTheme { get; set; } = default!;
+        readonly int maxLength = 100;
         readonly DataGridEditMode editMode = DataGridEditMode.Single;
 
         byte[]? documentContent;
         private readonly List<string> Themes = new List<string>
         {
-            "Default", "Standard", "Dark", "Material", "Humanistic"
+            "Default", "Standard", "Dark", "Material", "Humanistic", "Standard-Dark", "Humanistic-Dark", "Material-Dark", "Software", "Software-Dark"
         };
         protected override async Task OnInitializedAsync()
         {
@@ -102,6 +112,7 @@ namespace StudentApp.Components.Pages
                 });
                 await hubConnection.StartAsync();
                 Theme = ThemeValue;
+                PageTheme = ThemeValue;
                 await base.OnInitializedAsync();
 
                 programs = await ProgramsService.GetProgramsAsync();
@@ -122,6 +133,72 @@ namespace StudentApp.Components.Pages
             }
             Theme = ThemeValue;
             StateHasChanged();
+        }
+        private async Task ExportToExcel()
+        {
+            //var gridData = await StudentDataGrid.LoadData();
+            //var gridData = await dataGrid.GetDataAsync();
+            var excelBytes = ExcelExportService.ExportToExcel(students);
+
+
+            var fileName = "export.xlsx";
+
+            // Trigger file download
+            await TriggerFileDownload(fileName, excelBytes);
+        }
+        private async Task TriggerFileDownload(string fileName, byte[] fileContent)
+        {
+            var base64 = Convert.ToBase64String(fileContent);
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
+        }
+        //async Task ShowBusyDialog(bool withMessageAsString)
+        //{
+        //    try
+        //    {
+        //        _ = InvokeAsync(async () =>
+        //        {
+        //            // Simulate background task
+        //            //await Task.Delay(2000);
+
+        //            IsLoading = false;
+        //            // Close the dialog
+        //            DialogService.Close();
+        //        });
+
+        //        if (withMessageAsString)
+        //        {
+        //            await BusyDialog("Loading ...");
+        //        }
+        //        else
+        //        {
+        //            //await BusyDialog();
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        throw;
+        //    }
+
+        //}
+
+        async Task BusyDialog(string message)
+        {
+            await DialogService.OpenAsync("", ds =>
+            {
+                RenderFragment content = b =>
+                {
+                    b.OpenElement(0, "RadzenRow");
+
+                    b.OpenElement(1, "RadzenColumn");
+                    b.AddAttribute(2, "Size", "12");
+
+                    b.AddContent(3, message);
+
+                    b.CloseElement();
+                    b.CloseElement();
+                };
+                return content;
+            }, new DialogOptions() { ShowTitle = false, Style = "min-height:auto;min-width:auto;width:auto", CloseDialogOnEsc = false });
         }
         public async ValueTask DisposeAsync()
         {
@@ -162,26 +239,36 @@ namespace StudentApp.Components.Pages
                     var LastName = TrimInput(student.LastName);
                     student.FirstName = FirstName;
                     student.LastName = LastName;
-                    await AttachmentService.AddAttachmentAsync(attachment);
-                    attachment = new Attachment();
-                    ShowNotification(new NotificationMessage
+                    //await ShowBusyDialog(true);
+                    _ = InvokeAsync(async () =>
                     {
-                        Severity = NotificationSeverity.Success,
-                        Summary = "Saving attachment",
-                        Detail = "Please wait",
-                        Duration = 4000
+                        await AttachmentService.AddAttachmentAsync(attachment);
+                        attachment = new Attachment();
+                        ShowNotification(new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Success,
+                            Summary = "Saving attachment",
+                            Detail = "Please wait",
+                            Duration = 4000
+                        });
+                        var latestAttachment = await AttachmentService.GetAttachmentsAsync();
+                        var latestAttachmentId = latestAttachment?.Last().Id;
+                        student.AttchmentId = latestAttachmentId;
+                        student.DateCreated = DateTime.Now;
+                        await StudentService.AddStudentAsync(student);
+                        ShowNotification(new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Success,
+                            Summary = "Success",
+                            Detail = "Student addedd successfully",
+                            Duration = 4000
+                        });
+                        DialogService.Close();
                     });
-                    var latestAttachment = await AttachmentService.GetAttachmentsAsync();
-                    var latestAttachmentId = latestAttachment?.Last().Id;
-                    student.AttchmentId = latestAttachmentId;
-                    await StudentService.AddStudentAsync(student);
-                    ShowNotification(new NotificationMessage
+                    if (true)
                     {
-                        Severity = NotificationSeverity.Success,
-                        Summary = "Success",
-                        Detail = "Student addedd successfully",
-                        Duration = 4000
-                    });
+                        await BusyDialog("Loading ...");
+                    }
                     IsLoading = false;
                     students = await StudentService.GetStudentsAsync();
                     students = students?.OrderByDescending(st => st.Id).ToList();
@@ -191,6 +278,7 @@ namespace StudentApp.Components.Pages
                 }
                 else
                 {
+                    //await ShowBusyDialog(true);
                     ShowNotification(new NotificationMessage
                     {
                         Severity = NotificationSeverity.Error,
@@ -239,6 +327,7 @@ namespace StudentApp.Components.Pages
         }
         private async Task OpenEditDialog(Student student, int Id, int? attachmentId)
         {
+            var attachment = await AttachmentService.GetAttachmentById(attachmentId);
             await DialogService.OpenAsync<EditDialog>($"Editing - {student.FirstName} {student.LastName} - {student.StudentId}",
                          new Dictionary<string, object?>()
                          {
@@ -252,6 +341,8 @@ namespace StudentApp.Components.Pages
                               {"StudentId", student.StudentId},
                               {"Id", Id},
                               {"attachmentId", attachmentId},
+                              {"AttachmentName", attachment.FileName},
+                              {"DateCreated", attachment.DateCreate},
                               {"UpdateUI", (Action)UpdateUI},
                          },
                          new DialogOptions() { Width = "1400px", Height = "max-content", Resizable = true, Draggable = true });
@@ -332,8 +423,6 @@ namespace StudentApp.Components.Pages
             programs = await ProgramsService.GetProgramsAsync();
             StateHasChanged();
         }
-        private IBrowserFile? selectedFile;
-        private readonly string? fileContent;
         private async void OnFileInput(InputFileChangeEventArgs args)
         {
             long maxFileSize = 5 * 1024 * 1024;
@@ -355,6 +444,7 @@ namespace StudentApp.Components.Pages
                 {
                     FileName = selectedFile.Name,
                     FileType = selectedFile.ContentType,
+                    DateCreate = DateTime.Now
                 };
                 using (var stream = selectedFile.OpenReadStream(maxFileSize))
                 {
@@ -372,14 +462,42 @@ namespace StudentApp.Components.Pages
                     Duration = 4000
                 });
             }
+        }
+        public static string TruncateString(string input, int maxLength)
+        {
+            if (string.IsNullOrEmpty(input) || maxLength <= 0)
+            {
+                return string.Empty;
+            }
 
+            // If the string is already shorter than the max length, return it as is.
+            if (input.Length <= maxLength)
+            {
+                return input;
+            }
 
+            // Determine the suffix, which is the last 5 characters of the original string
+            string suffix = input.Length > 5 ? input.Substring(input.Length - 5) : input;
+
+            // Calculate the maximum length of the truncated string without exceeding the total maxLength
+            int maxStringLength = maxLength - suffix.Length;
+
+            // Ensure maxStringLength is not negative, indicating maxLength is too small to fit any part of the input
+            if (maxStringLength <= 0)
+            {
+                return suffix.Substring(0, maxLength);
+            }
+
+            // Return the truncated string with the suffix
+            return input.Substring(0, maxStringLength) + "..." + suffix;
         }
         private async Task ViewSingleAttachedDocument(int? attachmentId)
         {
             try
             {
                 Attachment attachment = await AttachmentService.GetAttachmentById(attachmentId);
+                var fileName = TruncateString(attachment.FileName, maxLength);
+                var dateCreated = attachment.DateCreate;
                 if (attachment != null)
                 {
 
@@ -397,7 +515,7 @@ namespace StudentApp.Components.Pages
 
                             stream.Position = 0;
 
-                            await DialogService.OpenAsync<DocumentViewer>("Attachment",
+                            await DialogService.OpenAsync<DocumentViewer>($"Attachment - {fileName}",
                         new Dictionary<string, object?>()
                         {
                               {"DocumentContent", documentContent},
@@ -466,5 +584,42 @@ namespace StudentApp.Components.Pages
                 });
             }
         }
+        private async Task HandleFileSelected(InputFileChangeEventArgs e)
+        {
+            var file = e.File;
+            Guid attachmentId = Guid.NewGuid(); // Generate a unique ID for the attachment
+
+            string uploadFolder = Path.Combine("Uploads", attachmentId.ToString());
+            if (!Directory.Exists(uploadFolder))
+            {
+                Directory.CreateDirectory(uploadFolder);
+            }
+
+            string filePath = Path.Combine(uploadFolder, file.Name);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.OpenReadStream().CopyToAsync(fileStream);
+            }
+
+            // Save file path to the database
+            //await SaveFilePathToDatabase(attachmentId, file.Name, filePath);
+        }
+
+        //private async Task SaveFilePathToDatabase(Guid attachmentId, string fileName, string filePath)
+        //{
+        //    using (var context = new YourDbContext())
+        //    {
+        //        var attachment = new Attachment
+        //        {
+        //            AttachmentId = attachmentId,
+        //            FileName = fileName,
+        //            FilePath = filePath
+        //        };
+
+        //        context.Attachments.Add(attachment);
+        //        await context.SaveChangesAsync();
+        //    }
+        //}
     }
 }

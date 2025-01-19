@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 <RadzenComponents />
-<div class="page">
+@* <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -10,10 +10,43 @@
             @Body
         </article>
     </main>
-</div>
+</div> *@
+<RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body': grid-template-rows:auto 1fr: grid-template-columns:auto 1fr">
+    <RadzenHeader Style="background-color:forestgreen; padding:5px">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
+            <div style="display: flex; align-items: center">
+                <RadzenSidebarToggle id="toggle" Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                    <img style="height:55px; width: 44px; margin-right:10px; " src="./NewMopaniLogo.png" />
+               @*  <RadzenLabel Text="@CurrentPage" /> *@
+            </div>
+        </RadzenStack>
+    </RadzenHeader>
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Style="grid-area: rz-sidebar">
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[0], ThemeValue)" Text="Home" Icon="home" />
+            <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[1], ThemeValue)" Text="Counter" Icon="account_box" />
+            <RadzenPanelMenuItem Click="()=>NavgateToPage(Pages[2], ThemeValue)" Text="Weather" Icon="account_box" />
+        </RadzenPanelMenu>
+        <div class="rz-p-4">
+            Sidebar
+        </div>
+    </RadzenSidebar>
+    <RadzenBody Style="background-color:white; grid-area: rz-body">
+        <div class="rz-p-4">
+            @Body
+        </div>
+    </RadzenBody>
+</RadzenLayout>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+<style>
+    #toggle:hover{
+       background-color: green
+    }
+</style>
+

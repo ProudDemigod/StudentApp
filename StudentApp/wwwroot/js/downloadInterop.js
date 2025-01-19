@@ -23,3 +23,12 @@ window.viewDocument = function (fileContent, mimeType) {
     // Open the document in a new window/tab
     window.open(url, '_blank');
 };
+window.downloadFile = (fileName, content) => {
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + content;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+

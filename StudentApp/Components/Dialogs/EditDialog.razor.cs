@@ -31,9 +31,11 @@ namespace StudentApp.Components.Dialogs
         [Parameter]
         public string StudentId { get; set; } = default!;
         [Parameter]
-        public int attachmentId { get; set; } = default!;  
+        public int attachmentId { get; set; } = default!;
+        [Parameter]
+        public DateTime DateCreated { get; set; } = default!;  
         #endregion
-        #region Srvices
+        #region Services
         [Inject] DialogService DialogService { get; set; } = default!;
         [Inject] StudentService StudentService { get; set; } = default!;
         [Inject] private NotificationService NotificationService { get; set; } = default!;
@@ -44,6 +46,8 @@ namespace StudentApp.Components.Dialogs
         bool value;
         private IBrowserFile? selectedFile;
         private Attachment? attachment;
+        [Parameter]
+        public string AttachmentName { get; set; } = default!;
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
@@ -89,6 +93,8 @@ namespace StudentApp.Components.Dialogs
                             ShowNotification(new NotificationMessage
                             { Severity = NotificationSeverity.Success, Summary = "Success", Detail = "Attachment Updated Successfully!", Duration = 2000 });
                         }
+                        Student.DateCreated = DateCreated;
+                        Student.LastModified = DateTime.Now;
                         await StudentService.UpdateStudentAsync(Id, Student);
                         Student = new Student();
                         await InvokeAsync(UpdateUI);
@@ -149,7 +155,7 @@ namespace StudentApp.Components.Dialogs
                     Detail = "File size is greater that max allowed\n Please select a different file",
                     Duration = 4000
                 });
-                attachment = new Attachment();
+                attachment = null;
             }
             else
             {
@@ -157,7 +163,9 @@ namespace StudentApp.Components.Dialogs
                 {
                     FileName = selectedFile.Name,
                     FileType = selectedFile.ContentType,
+                    DateCreate = DateTime.Now,
                 };
+                AttachmentName = selectedFile.Name;
                 using (var stream = selectedFile.OpenReadStream(maxFileSize))
                 {
                     using (var memoryStream = new MemoryStream())
